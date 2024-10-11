@@ -194,14 +194,31 @@ exports.getSingleUser = catchAsyncErrors(async (req, res, next) => {
 
 // Get All Users -- Admin
 exports.getAllUsers = catchAsyncErrors(async (req, res, next) => {
+    const page = parseInt(req.query.page, 10) || 1;  // Default to page 1 if not provided
+    const limit = parseInt(req.query.limit, 10) || 2;  // Default to 2 users per page if not provided
 
-    const users = await User.find();
+    // Calculate the skip value for MongoDB
+    const skip = (page - 1) * limit;
 
+    // Fetch users for the current page
+    const users = await User.find().skip(skip).limit(limit);
+
+    // Count the total number of users in the database
+    const totalUsers = await User.countDocuments();
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    // Send paginated response
     res.status(200).json({
         success: true,
         users,
+        totalUsers,
+        totalPages,
+        currentPage: page,
     });
 });
+
 
 // Update User Role -- Admin
 exports.updateRole = catchAsyncErrors(async (req, res, next) => {
@@ -234,7 +251,7 @@ exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler(`User does not exist with ID: ${req.params.id}`))
     }
 
-    await User.remove();
+    await User.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
         success: true,
