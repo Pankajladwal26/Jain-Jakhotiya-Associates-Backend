@@ -20,7 +20,9 @@ app.use(cookieParser());
 
 // Route Imports
 const user = require("./routes/userRoutes");
+const blog = require("./routes/blogRoutes");
 app.use("/api/v1", user);
+app.use("/api/v1", blog);
 
 // Middleware for Errors
 app.use(errorMiddleware);
